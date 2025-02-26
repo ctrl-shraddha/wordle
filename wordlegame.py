@@ -22,6 +22,7 @@ def hash_password(password):
 def get_word_of_the_day():
     today = date.today().strftime('%Y-%m-%d')
     cur = mysql.connection.cursor()
+    
     cur.execute("SELECT word FROM words WHERE date = %s", (today,))
     word = cur.fetchone()
     if word:
