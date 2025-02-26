@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Welcome to Wordle!</h2>
+        <p>Guess the word of the day.</p>
+        <input type="text" id="wordInput" maxlength="5" placeholder="Enter word...">
+        <button onclick="checkWord()">Submit</button>
+        <p id="result"></p>
+        <button onclick="logout()">Logout</button>
+    </div>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
