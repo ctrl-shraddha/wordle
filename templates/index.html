@@ -1,145 +1,80 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Wordle Clone!</title>
 
-    <script src="static/js/main.js"></script>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wordle Clone!</title>
 
-    <link rel="stylesheet" href="static/css/styles-index.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
-    />
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        text-align: center;
-        background-image: url('words.jpg');
-      }
-      
-      
-      /* #start-container {
-        margin-top: 50px;
-      } */
-      #start-button {
-        padding: 10px 20px;
-        font-size: 25px;
-        margin-top: 20px;
-        cursor: pointer;
-        background-color: #ff0000;
-        
-      }
-      #instructions {
-        max-width: 600px;
-        margin: 20px auto;
-        padding: 10px;
-        border: 1px solid #ccc;
-        background-color: lightpink;
-        border-radius: 5px;
-      }
-      #game-board {
-        display: none; /* Hide the game initially */
-        /* margin-top: 20px; */
-      }
-    </style>
-  </head>
+  <script src="static/js/main.js"></script>
 
-  <body>
-    <nav>
-      <a href="{{ url_for('logout') }}" style="position: absolute; top: 10px; right: 10px; padding: 10px; background-color: red; color: white; text-decoration: none; border-radius: 5px;">
-          Logout
-      </a>
+  <link rel="stylesheet" href="static/css/styles-index.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-image: url('words.jpg');
+    }
+
+    #start-button {
+      padding: 10px 20px;
+      font-size: 25px;
+      margin-top: 20px;
+      cursor: pointer;
+      background-color: #ff0000;
+
+    }
+
+    #instructions {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 10px;
+      border: 1px solid #ccc;
+      background-color: lightpink;
+      border-radius: 5px;
+    }
+
+    #game-board {
+      display: none;
+      /* Hide the game initially */
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <a href="{{ url_for('logout') }}"
+      style="position: absolute; top: 10px; right: 10px; padding: 10px; background-color: red; color: white; text-decoration: none; border-radius: 5px;">
+      Logout
+    </a>
   </nav>
-  
-    <!--Start Screen with Instructionyy-->
-     <div id="start-container">
-      <h1>Welcome to Wordle!</h1>
-      <div id="instructions">
-        <h3>How to Play:</h3>
-        <ul style="text-align: left; display: inline-block;">
-          <li>Guess the 5-letter word in 6 tries.</li>
-          <li>Each guess must be a valid word.</li>
-          <li>After each guess, the tiles will change color to show how close you are:</li>
-          <ul>
-            <li>🟩 Green: Correct letter in the right position.</li>
-            <li>🟨 Yellow: Correct letter in the wrong position.</li>
-            <li>⬜ Gray: Letter is not in the word.</li>
-          </ul>
+
+  <!--Start Screen with Instructionyy-->
+  <div id="start-container">
+    <h1>Welcome to Wordle!</h1>
+    <div id="instructions">
+      <h3>How to Play:</h3>
+      <ul style="text-align: left; display: inline-block;">
+        <li>Guess the 5-letter word in 6 tries.</li>
+        <li>Each guess must be a valid word.</li>
+        <li>After each guess, the tiles will change color to show how close you are:</li>
+        <ul>
+          <li>🟩 Green: Correct letter in the right position.</li>
+          <li>🟨 Yellow: Correct letter in the wrong position.</li>
+          <li>⬜ Gray: Letter is not in the word.</li>
         </ul>
-      </div>
-      <button id="start-button">Start Game</button>
+      </ul>
     </div>
+    <button id="start-button">Start Game</button>
+  </div>
 
-    <!--Game Board (Hidden initially)-->
-     <div id="game-board">
-      <div id="container">
-        <div id="game">
-          <header>
-            <h1 class="title">WORDLE</h1>
-          </header>
+  <script>
+    document.getElementById("start-button").addEventListener("click", function () {
+      window.location.href = "/game"; // Redirect to game.html
+    });
+  </script>
 
-          <div id="board-container">
-            <div id="board"></div>
-          </div>
 
-          <div id="keyboard-container">
-            <div class="keyboard-row">
-              <button data-key="q">q</button>
-              <button data-key="w">w</button>
-              <button data-key="e">e</button>
-              <button data-key="r">r</button>
-              <button data-key="t">t</button>
-              <button data-key="y">y</button>
-              <button data-key="u">u</button>
-              <button data-key="i">i</button>
-              <button data-key="o">o</button>
-              <button data-key="p">p</button>
-            </div>
-            <div class="keyboard-row">
-              <div class="spacer-half"></div>
-              <button data-key="a">a</button>
-              <button data-key="s">s</button>
-              <button data-key="d">d</button>
-              <button data-key="f">f</button>
-              <button data-key="g">g</button>
-              <button data-key="h">h</button>
-              <button data-key="j">j</button>
-              <button data-key="k">k</button>
-              <button data-key="l">l</button>
-              <button data-key="enter" class="wide-button-1">Enter</button>
-              <div class="spacer-half"></div>
-            </div>
-            <div class="keyboard-row">
-              <button data-key="z">z</button>
-              <button data-key="x">x</button>
-              <button data-key="c">c</button>
-              <button data-key="v">v</button>
-              <button data-key="b">b</button>
-              <button data-key="n">n</button>
-              <button data-key="m">m</button>
-              <button data-key="del" class="wide-button-2">Del</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <script>
-      document.getElementById("start-button").addEventListener("click", function () {
-        document.getElementById("game-board").style.display = "block"; // Show game
-        document.getElementById("start-container").style.display = "none"; // Hide instructions and button
-        startGame();
-      });
-
-      function startGame() {
-        console.log("Game started!");
-        // Add Wordle game initialization logic here
-      }
-    </script>
-    
-    
-</html> 
-
+</html>

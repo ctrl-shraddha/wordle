@@ -1,3 +1,4 @@
+document.documentElement.requestFullscreen();
 document.addEventListener("DOMContentLoaded", () => {
   createSquares();
   getNewWord();
@@ -84,10 +85,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
           if (currentWord === word) {
               window.alert("🎉 Congratulations!");
+
+              fetch("/update-history", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ status: "win" })
+            });
+        
           }
 
           if (guessedWords.length === 6) {
               window.alert(`😞 Sorry, you have no more guesses! The word is ${word}.`);
+
+              fetch("/update-history", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ status: "lose" })
+            });
           }
 
           guessedWords.push([]);
@@ -136,4 +154,62 @@ document.addEventListener("DOMContentLoaded", () => {
           updateGuessedWords(letter);
       };
   }
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+    fetch("/get-history")
+        .then(response => response.json())
+        .then(data => {
+            generateCalendar(data);
+        });
+
+    function generateCalendar(history) {
+        const calendarDiv = document.getElementById("calendar");
+        calendarDiv.innerHTML = "";  // Clear previous calendar
+
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth();
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const monthNames = ["January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+          ];
+
+
+        let calendarHTML = `<h2>${monthNames[month]} ${year}</h2>`;
+        
+        
+        calendarHTML += "<table><tr>";
+        
+        // Weekday headers
+        const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        for (let d of days) {
+            calendarHTML += `<th>${d}</th>`;
+        }
+        calendarHTML += "</tr><tr>";
+
+        // Empty spaces before the first day
+        for (let i = 0; i < firstDay; i++) {
+            calendarHTML += "<td></td>";
+        }
+
+        // Add days with colors based on history
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+            let color = "gray";  // Default for not attempted
+            if (history[dateString] === "win") color = "green";
+            if (history[dateString] === "lose") color = "red";
+
+            calendarHTML += `<td style="background-color: ${color};">${day}</td>`;
+
+            // Start a new row every Sunday
+            if ((day + firstDay) % 7 === 0) {
+                calendarHTML += "</tr><tr>";
+            }
+        }
+
+        calendarHTML += "</tr></table>";
+        calendarDiv.innerHTML = calendarHTML;
+    }
 });

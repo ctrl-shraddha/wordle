@@ -88,6 +88,7 @@
   
   #keyboard-container {
     height: 200px;
+    width: 100%;
   }
   
   .keyboard-row {
@@ -126,3 +127,5 @@
   .spacer-half {
     flex-grow: 0.5;
   }
+
+  
