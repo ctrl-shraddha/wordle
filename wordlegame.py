@@ -143,18 +143,31 @@ def get_history():
     user_id = session['user_id']
     # user_id = '108'
     today = date.today()
-    first_day = today.replace(day=1)
-    last_day = today.replace(day=28) + timedelta(days=4)  # Ensures we get up to 31st
-    last_day = last_day - timedelta(days=last_day.day - 1)  # Adjust to last day of month
-
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT date, status FROM game_history WHERE user_id = %s AND date BETWEEN %s AND %s", 
-                (user_id, first_day, last_day))
+    month = request.args.get('month', type=int, default=date.today().month)
+    year = request.args.get('year', type=int, default=date.today().year)
+    first_day = date(year, month, 1)
+    last_day = (first_day.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
     
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT date, status FROM game_history WHERE user_id = %s AND date BETWEEN %s AND %s", (user_id, first_day, last_day))
     history = {row[0].strftime("%Y-%m-%d"): row[1] for row in cur.fetchall()}
     cur.close()
+    
+    return jsonify(history)
 
-    return jsonify(history)    
+
+    # first_day = today.replace(day=1)
+    # last_day = today.replace(day=28) + timedelta(days=4)  # Ensures we get up to 31st
+    # last_day = last_day - timedelta(days=last_day.day - 1)  # Adjust to last day of month
+
+    # cur = mysql.connection.cursor()
+    # cur.execute("SELECT date, status FROM game_history WHERE user_id = %s AND date BETWEEN %s AND %s", 
+    #             (user_id, first_day, last_day))
+    
+    # history = {row[0].strftime("%Y-%m-%d"): row[1] for row in cur.fetchall()}
+    # cur.close()
+
+    # return jsonify(history)    
 
 @app.route("/update-history", methods=["POST"])
 def update_history():

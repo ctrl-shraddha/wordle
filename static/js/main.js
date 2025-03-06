@@ -157,53 +157,45 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 document.addEventListener("DOMContentLoaded", function() {
-    fetch("/get-history")
-        .then(response => response.json())
-        .then(data => {
-            generateCalendar(data);
-        });
+    let currentMonth = new Date().getMonth() + 1;
+    let currentYear = new Date().getFullYear();
 
-    function generateCalendar(history) {
+    function fetchHistory(month, year) {
+        fetch(`/get-history?month=${month}&year=${year}`)
+            .then(response => response.json())
+            .then(data => {
+                generateCalendar(data, month, year);
+            });
+    }
+
+    function generateCalendar(history, month, year) {
         const calendarDiv = document.getElementById("calendar");
         calendarDiv.innerHTML = "";  // Clear previous calendar
 
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = today.getMonth();
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const monthNames = ["January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December"
-          ];
+        const firstDay = new Date(year, month - 1, 1).getDay();
+        const daysInMonth = new Date(year, month, 0).getDate();
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-
-        let calendarHTML = `<h2>${monthNames[month]} ${year}</h2>`;
-        
-        
+        let calendarHTML = `<button id='prevMonthBtn'><</button>${monthNames[month - 1]} ${year}<button id='nextMonthBtn'>></button>`;
         calendarHTML += "<table><tr>";
         
-        // Weekday headers
         const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
         for (let d of days) {
             calendarHTML += `<th>${d}</th>`;
         }
         calendarHTML += "</tr><tr>";
 
-        // Empty spaces before the first day
         for (let i = 0; i < firstDay; i++) {
             calendarHTML += "<td></td>";
         }
 
-        // Add days with colors based on history
         for (let day = 1; day <= daysInMonth; day++) {
-            const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-            let color = "gray";  // Default for not attempted
+            const dateString = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+            let color = "gray";
             if (history[dateString] === "win") color = "green";
             if (history[dateString] === "lose") color = "red";
-
             calendarHTML += `<td style="background-color: ${color};">${day}</td>`;
 
-            // Start a new row every Sunday
             if ((day + firstDay) % 7 === 0) {
                 calendarHTML += "</tr><tr>";
             }
@@ -211,5 +203,25 @@ document.addEventListener("DOMContentLoaded", function() {
 
         calendarHTML += "</tr></table>";
         calendarDiv.innerHTML = calendarHTML;
+
+        document.getElementById("prevMonthBtn").addEventListener("click", () => {
+            currentMonth--;
+            if (currentMonth < 1) {
+                currentMonth = 12;
+                currentYear--;
+            }
+            fetchHistory(currentMonth, currentYear);
+        });
+
+        document.getElementById("nextMonthBtn").addEventListener("click", () => {
+            currentMonth++;
+            if (currentMonth > 12) {
+                currentMonth = 1;
+                currentYear++;
+            }
+            fetchHistory(currentMonth, currentYear);
+        });
     }
+
+    fetchHistory(currentMonth, currentYear);
 });
