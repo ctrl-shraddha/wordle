@@ -22,6 +22,7 @@ def hash_password(password):
 def get_word_of_the_day():
     today = date.today().strftime('%Y-%m-%d')
     cur = mysql.connection.cursor()
+    
     cur.execute("SELECT word FROM words WHERE date = %s", (today,))
     word = cur.fetchone()
     if word:
@@ -43,9 +44,23 @@ def get_word():
 # Home Route
 @app.route('/')
 def home():
-    if 'user' not in session:
+    if 'user_id' not in session:
         return redirect(url_for('login'))
     return render_template('index.html')
+
+#Game Route
+@app.route('/game')
+def game():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return render_template('game.html')
+
+#Game Route
+@app.route('/history')
+def history():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return render_template('history.html')
 
 # Login Route
 # @app.route('/login', methods=['GET', 'POST'])
@@ -71,8 +86,9 @@ def login():
         cur.execute("SELECT * FROM users WHERE username = %s AND password = %s", (username, password))
         user = cur.fetchone()
         print(user)
+        print(user[0])
         if user:
-            session['user'] = username
+            session['user_id'] = user[0]
             return redirect(url_for('home'))
     return render_template('login.html')
 
@@ -97,32 +113,80 @@ def register():
 # Logout Route
 @app.route('/logout')
 def logout():
-    session.pop('user', None)
+    session.pop('user_id', None)
     return redirect(url_for('login'))
 
-# API for Word of the Day
-@app.route('/word')
-def word():
-    return jsonify({'word': get_word_of_the_day()})
+def update_game_history(user_id, game_date, status):
+    cur = mysql.connection.cursor()
+    # Check if an entry already exists
+    cur.execute("SELECT id FROM game_history WHERE user_id = %s AND date = %s", (user_id, game_date))
+    existing_entry = cur.fetchone()
 
-# API for checking word validity
-@app.route('/check_word', methods=['POST'])
-def check_word():
+    if existing_entry:
+        # Update status if already exists
+        cur.execute("UPDATE game_history SET status = %s WHERE id = %s", (status, existing_entry[0]))
+    else:
+        # Insert new record
+        cur.execute("INSERT INTO game_history (user_id, date, status) VALUES (%s, %s, %s)", 
+                    (user_id, game_date, status))
+
+    mysql.connection.commit()
+    cur.close()
+
+from datetime import datetime, timedelta
+
+@app.route("/get-history", methods=["GET"])
+def get_history():
+    if 'user_id' not in session:
+        return jsonify({"error": "User not logged in"}), 401
+
+    user_id = session['user_id']
+    # user_id = '108'
+    today = date.today()
+    month = request.args.get('month', type=int, default=date.today().month)
+    year = request.args.get('year', type=int, default=date.today().year)
+    first_day = date(year, month, 1)
+    last_day = (first_day.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+    
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT date, status FROM game_history WHERE user_id = %s AND date BETWEEN %s AND %s", (user_id, first_day, last_day))
+    history = {row[0].strftime("%Y-%m-%d"): row[1] for row in cur.fetchall()}
+    cur.close()
+    
+    return jsonify(history)
+
+
+    # first_day = today.replace(day=1)
+    # last_day = today.replace(day=28) + timedelta(days=4)  # Ensures we get up to 31st
+    # last_day = last_day - timedelta(days=last_day.day - 1)  # Adjust to last day of month
+
+    # cur = mysql.connection.cursor()
+    # cur.execute("SELECT date, status FROM game_history WHERE user_id = %s AND date BETWEEN %s AND %s", 
+    #             (user_id, first_day, last_day))
+    
+    # history = {row[0].strftime("%Y-%m-%d"): row[1] for row in cur.fetchall()}
+    # cur.close()
+
+    # return jsonify(history)    
+
+@app.route("/update-history", methods=["POST"])
+def update_history():
+    if "user_id" not in session:
+        return jsonify({"error": "User not logged in"}), 401
+
     data = request.get_json()
-    guessed_word = data['word'].lower()
-    correct_word = get_word_of_the_day()
+    status = data.get("status")  # 'win' or 'lose'
     
-    response = {'correct': guessed_word == correct_word, 'letters': []}
+    if status not in ["win", "lose"]:
+        return jsonify({"error": "Invalid status"}), 400
+
+    user_id = session["user_id"]
+    # user_id = '108'
+    print(f"Updating history for user_id: {user_id}, status: {status}")  # Debugging
+
+    update_game_history(user_id, date.today(), status)
     
-    for i, letter in enumerate(guessed_word):
-        if letter == correct_word[i]:
-            response['letters'].append({'letter': letter, 'status': 'correct'})
-        elif letter in correct_word:
-            response['letters'].append({'letter': letter, 'status': 'present'})
-        else:
-            response['letters'].append({'letter': letter, 'status': 'absent'})
-    
-    return jsonify(response)
+    return jsonify({"message": "History updated successfully"})
 
 if __name__ == '__main__':
     app.run(debug=True)
